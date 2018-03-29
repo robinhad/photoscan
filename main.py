@@ -36,14 +36,11 @@ class KivyCamera(Image):
         self.capture = capture
         Clock.schedule_interval(self.update, 1.0 / fps)
         # Initiate SIFT detector
-        self.sift = cv2.xfeatures2d.SURF_create()
+        self.sift = cv2.AKAZE_create()
         self.img1 = cv2.UMat(cv2.imread('box_in_scene.JPG',0))        # queryImage
         self.kp1, self.des1 = self.sift.detectAndCompute(self.img1,None)
-        self.FLANN_INDEX_KDTREE = 0
-        self.index_params = dict(algorithm = self.FLANN_INDEX_KDTREE, trees = 5)
-        self.search_params = dict(checks = 50)
         self.font = cv2.FONT_HERSHEY_SIMPLEX
-        self.flann = cv2.FlannBasedMatcher(self.index_params, self.search_params)
+        self.flann = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
         self.max_matches = 0
         self.max_matches_m = ()
         self.last_match_time = datetime.now()
@@ -59,12 +56,13 @@ class KivyCamera(Image):
             # find the keypoints and descriptors with SIFT
             kp2, des2 = self.sift.detectAndCompute(img2,None)
 
-            matches = self.flann.knnMatch(self.des1,des2,k=2)
+            matches = self.flann.match(self.des1,des2)
             # store all the good matches as per Lowe's ratio test.
+            #good = sorted(matches, key = lambda x:x.distance)
             good = []
-            for m,n in matches:
-                if m.distance < 0.7*n.distance:
-                    good.append(m)
+            for i in matches:
+                if i.distance <= 100:
+                    good.append(i)
 	    
             if len(good)>MIN_MATCH_COUNT:
                 src_pts = np.float32([ self.kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
@@ -78,10 +76,9 @@ class KivyCamera(Image):
                 if M is None:
                     pass
                 else:
-                    if (len(good) > self.max_matches) or ((datetime.now() - self.last_match_time).seconds > 5) :
-                        self.max_matches = len(good)
-                        self.max_matches_m = M
-                        self.last_match_time = datetime.now()
+                    self.max_matches = len(good)
+                    self.max_matches_m = M
+                    self.last_match_time = datetime.now()
                     components = getComponents(self.max_matches_m)
                     cv2.putText(img2,"Matches: " + str(self.max_matches),(1,30), self.font, 0.6,(255,255,255),2,cv2.LINE_AA)
                     cv2.putText(img2,"Translation: " + str(components[0]),(1,60), self.font, 0.6,(255,255,255),2,cv2.LINE_AA)
