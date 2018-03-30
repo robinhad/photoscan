@@ -19,6 +19,12 @@ def get_photos():
 
 
 @app.route('/api/photo/', methods=['POST'])
-def save_photo_parameters(post_id):
+def save_photo_parameters():
     '''API method for saving coordinates in database'''
-    return 'Post %d' % post_id
+    request.form['id']
+    request.form['image']  # TODO: try request files?
+    request.form['longitude']
+    request.form['latitude']
+    request.form['altitude']
+    
+    return 'Post'
