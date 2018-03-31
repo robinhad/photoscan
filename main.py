@@ -26,5 +26,7 @@ def save_photo_parameters():
     request.form['longitude']
     request.form['latitude']
     request.form['altitude']
+    request.form['anglex']  # Shear
+    request.form['angley']  # Theta
     
     return 'Post'

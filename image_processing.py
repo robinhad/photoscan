@@ -2,7 +2,23 @@ import cv2
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import base64
 MIN_MATCH_COUNT = 10
+
+
+def encode_image_as_string(img):
+    retval, buffer = cv2.imencode('.jpg', img)
+    return base64.b64encode(buffer)
+
+
+def decode_image_from_string(image_string):
+    nparr = np.fromstring(base64.b64decode(jpg_as_text), np.uint8)
+    return cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+
+def decode_grayscale_image_from_string(image_string):
+    nparr = np.fromstring(base64.b64decode(jpg_as_text), np.uint8)
+    return cv2.imdecode(nparr, 0)
 
 
 def get_components(normalised_homography):
@@ -26,19 +42,15 @@ def get_components(normalised_homography):
     return (translation, theta, scale, shear)
 
 
-def find_image_angle_properties():
+def find_image_angle_properties(img1, img2):
     surf = cv2.xfeatures2d.SURF_create()
-    img1 = cv2.imread('box_in_scene.JPG', 0)  # query image in grayscale mode
-    kp1, des1 = surf.detectAndCompute(img1, None)
     FLANN_INDEX_KDTREE = 0
     index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
     search_params = dict(checks=50)
     font = cv2.FONT_HERSHEY_SIMPLEX
     flann = cv2.FlannBasedMatcher(index_params, search_params)
 
-    img2 = cv2.imread('box_in_scene.JPG', 0)  # trainImage
-
-    # find the keypoints and descriptors with SURF
+    kp1, des1 = surf.detectAndCompute(img1, None)
     kp2, des2 = surf.detectAndCompute(img2, None)
 
     matches = flann.knnMatch(des1, des2, k=2)
@@ -85,4 +97,6 @@ def find_image_angle_properties():
 
 
 if __name__ == '__main__':
-    find_image_angle_properties()
+    img1 = cv2.imread('box_in_scene.JPG', 0)
+    img2 = cv2.imread('box_in_scene.JPG', 0)
+    find_image_angle_properties(img1, img2)
