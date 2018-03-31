@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 import math
-import matplotlib.pyplot as plt
 import base64
 MIN_MATCH_COUNT = 10
 
@@ -12,8 +11,8 @@ def encode_image_as_string(img):
 
 
 def decode_image_from_string(image_string):
-    nparr = np.fromstring(base64.b64decode(jpg_as_text), np.uint8)
-    return cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    nparr = np.fromstring(base64.b64decode(image_string), np.uint8)
+    return cv2.imdecode(nparr, 0)  # cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
 
 def decode_grayscale_image_from_string(image_string):
@@ -92,11 +91,13 @@ def find_image_angle_properties(img1, img2):
             img2 = cv2.polylines(img2, [np.int32(dst)],
                                  True, (255, 255, 255), 3, cv2.LINE_AA)
 
-    plt.imshow(img2, cmap='gray', interpolation='bicubic')
-    plt.show()
-
+    return img2
+    
 
 if __name__ == '__main__':
+    import matplotlib.pyplot as plt
     img1 = cv2.imread('box_in_scene.JPG', 0)
     img2 = cv2.imread('box_in_scene.JPG', 0)
-    find_image_angle_properties(img1, img2)
+    img = find_image_angle_properties(img1, img2)
+    plt.imshow(img, cmap='gray', interpolation='bicubic')
+    plt.show()
