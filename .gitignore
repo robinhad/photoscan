@@ -2,3 +2,7 @@
 *.JPG
 .vscode
 __pycache__
+node_modules
+*-lock.json
+package-lock.json
+mobileapp/package-lock.json

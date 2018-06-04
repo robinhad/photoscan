@@ -42,6 +42,7 @@ def get_components(normalised_homography):
 
 
 def find_image_angle_properties(img1, img2):
+    print("Initializing comparers")
     surf = cv2.xfeatures2d.SURF_create()
     FLANN_INDEX_KDTREE = 0
     index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
@@ -49,9 +50,12 @@ def find_image_angle_properties(img1, img2):
     font = cv2.FONT_HERSHEY_SIMPLEX
     flann = cv2.FlannBasedMatcher(index_params, search_params)
 
+    img1 = img1
+    img2 = img2
+
     kp1, des1 = surf.detectAndCompute(img1, None)
     kp2, des2 = surf.detectAndCompute(img2, None)
-
+    
     matches = flann.knnMatch(des1, des2, k=2)
     # store all the good matches as per Lowe's ratio test.
     good = []
@@ -96,8 +100,8 @@ def find_image_angle_properties(img1, img2):
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    img1 = cv2.imread('box_in_scene.JPG', 0)
-    img2 = cv2.imread('box_in_scene.JPG', 0)
+    img1 = cv2.imread('test.jpg', 0)
+    img2 = cv2.imread('test.jpg', 0)
     img = find_image_angle_properties(img1, img2)
     plt.imshow(img, cmap='gray', interpolation='bicubic')
     plt.show()

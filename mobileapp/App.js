@@ -9,6 +9,7 @@ import {
   View
 } from 'react-native';
 import { RNCamera } from 'react-native-camera';
+import RNFS from 'react-native-fs'
 
 class App extends Component {
   render() {
@@ -38,9 +39,17 @@ class App extends Component {
 
   takePicture = async function() {
     if (this.camera) {
-      const options = { quality: 1, base64: true };
+      const options = { quality: 0.5, base64: true };
       const data = await this.camera.takePictureAsync(options)
-      console.log(data.uri);
+      const base64image = await RNFS.readFile(data.uri, 'base64');
+      fetch("http://192.168.1.245:8888/photo", {
+        method: 'POST',
+        headers: new Headers({
+             'Content-Type': 'application/x-www-form-urlencoded', // <-- Specifying the Content-Type
+        }),
+        body: base64image // <-- Post parameters
+      });
+      console.log(base64image);
     }
   };
 }
