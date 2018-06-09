@@ -1,6 +1,6 @@
 'use strict';
 import React, { Component } from 'react';
-import BasicView from "./Components";
+import BasicView, { cameraImage } from "./Components";
 import {
   AppRegistry,
   Dimensions,
@@ -8,7 +8,8 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Button
+  Button,
+  Image
 } from 'react-native';
 import { RNCamera } from 'react-native-camera';
 import RNFS from 'react-native-fs'
@@ -18,14 +19,15 @@ class HomeScreen extends BasicView {
   render() {
     const { navigate } = this.props.navigation;
     return (
-      <View style={{ flex: 1, alignItems: 'flex-start', justifyContent: "flex-start" }}>
-        <Text>This is main menu</Text>
-        <Button
-        title="Take photo of historical landmark"
-        onPress={() =>
-          navigate('PhotoTaker')
-        }
-      />
+      <View style={styles.maincontainer}>
+        <TouchableOpacity style={styles.button} onPress={()=>{navigate('PhotoTaker')}}>
+          <Image style={ styles.stretch} source={ require("./assets/camera.png") }/>
+          <Text>Take A photo of historical landmark</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={()=>{navigate('Map')}}>
+          <Image style={ styles.stretch} source={ require("./assets/map.png") }/>
+          <Text style={{justifyContent: 'center'}}>Map of taken photo</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -58,22 +60,58 @@ class PhotoTakerScreen extends BasicView {
   }
 
   takePicture = async function() {
+    const { navigate } = this.props.navigation;
     if (this.camera) {
       const options = { quality: 0.5, base64: true };
       const data = await this.camera.takePictureAsync(options)
       const base64image = await RNFS.readFile(data.uri, 'base64');
+      navigate("Home");
       fetch("http://192.168.1.245:8888/photo", {
         method: 'POST',
         headers: new Headers({
              'Content-Type': 'application/x-www-form-urlencoded', // <-- Specifying the Content-Type
         }),
         body: base64image // <-- Post parameters
-      });
+      })
+      .then((response) => /*response.json())
+      .then((responseJson) =>*/ {
+        alert(response);
+      })
+      .catch((error) => {
+        console.error(error);
+      });;
     }
   };
 }
 
+class MapScreen extends BasicView {
+  render() {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: "center" }}>
+        <Text>Here will be map of taken photo</Text>
+      </View>
+    );
+  }
+}
+
 const styles = StyleSheet.create({
+  maincontainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row'
+  },
+  button: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 10,
+    marginLeft: 12,
+    marginRight: 12,
+    marginBottom: 20,
+    alignItems: 'center',
+    width: 110,
+  },
   container: {
     flex: 1,
     flexDirection: 'column',
@@ -92,6 +130,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     alignSelf: 'center',
     margin: 20
+  },
+  stretch: {
+    width: 100,
+    height: 100
   }
 });
 
@@ -99,6 +141,7 @@ const RootStack = createStackNavigator(
   {
     Home: HomeScreen,
     PhotoTaker: PhotoTakerScreen,
+    Map: MapScreen
   },
   {
     initialRouteName: 'Home',
