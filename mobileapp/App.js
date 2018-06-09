@@ -1,5 +1,6 @@
 'use strict';
 import React, { Component } from 'react';
+import BasicView from "./Components";
 import {
   AppRegistry,
   Dimensions,
@@ -13,11 +14,11 @@ import { RNCamera } from 'react-native-camera';
 import RNFS from 'react-native-fs'
 import { createStackNavigator } from 'react-navigation';
 
-class HomeScreen extends React.Component {
+class HomeScreen extends BasicView {
   render() {
     const { navigate } = this.props.navigation;
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ flex: 1, alignItems: 'flex-start', justifyContent: "flex-start" }}>
         <Text>This is main menu</Text>
         <Button
         title="Take photo of historical landmark"
@@ -30,7 +31,7 @@ class HomeScreen extends React.Component {
   }
 }
 
-class PhotoTakerScreen extends React.Component {
+class PhotoTakerScreen extends BasicView {
   render() {
     return (
       <View style={styles.container}>
