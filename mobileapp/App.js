@@ -6,12 +6,31 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
+  Button
 } from 'react-native';
 import { RNCamera } from 'react-native-camera';
 import RNFS from 'react-native-fs'
+import { createStackNavigator } from 'react-navigation';
 
-class App extends Component {
+class HomeScreen extends React.Component {
+  render() {
+    const { navigate } = this.props.navigation;
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Text>This is main menu</Text>
+        <Button
+        title="Take photo of historical landmark"
+        onPress={() =>
+          navigate('PhotoTaker')
+        }
+      />
+      </View>
+    );
+  }
+}
+
+class PhotoTakerScreen extends React.Component {
   render() {
     return (
       <View style={styles.container}>
@@ -49,7 +68,6 @@ class App extends Component {
         }),
         body: base64image // <-- Post parameters
       });
-      console.log(base64image);
     }
   };
 }
@@ -76,6 +94,18 @@ const styles = StyleSheet.create({
   }
 });
 
-AppRegistry.registerComponent('App', () => App);
+const RootStack = createStackNavigator(
+  {
+    Home: HomeScreen,
+    PhotoTaker: PhotoTakerScreen,
+  },
+  {
+    initialRouteName: 'Home',
+  }
+);
 
-export default App;
+export default class App extends React.Component {
+  render() {
+    return <RootStack />;
+  }
+}
