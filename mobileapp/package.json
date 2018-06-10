@@ -11,6 +11,7 @@
     "react-native": "0.54.3",
     "react-native-camera": "^1.0.3",
     "react-native-fs": "^2.9.12",
+    "react-native-heading": "^1.1.0",
     "react-navigation": "^2.2.5"
   },
   "devDependencies": {
