@@ -10,13 +10,17 @@ import {
   View,
   Button,
   Image,
-  DeviceEventEmitter
+  DeviceEventEmitter,
+  Platform,
+  Linking
 } from 'react-native';
 import { RNCamera } from 'react-native-camera';
 import RNFS from 'react-native-fs'
 import { createStackNavigator } from 'react-navigation';
 
 import { ReactNativeHeading } from 'NativeModules'
+
+const host = "http://192.168.1.245:8888";
 
 class HomeScreen extends BasicView {
   render() {
@@ -25,11 +29,7 @@ class HomeScreen extends BasicView {
       <View style={styles.maincontainer}>
         <TouchableOpacity style={styles.button} onPress={() => { navigate('PhotoTaker') }}>
           <Image style={styles.stretch} source={require("./assets/camera.png")} />
-          <Text>Take A photo of historical landmark</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => { navigate('Map') }}>
-          <Image style={styles.stretch} source={require("./assets/map.png")} />
-          <Text style={{ justifyContent: 'center' }}>Map of taken photo</Text>
+          <Text>Take a photo to recognize</Text>
         </TouchableOpacity>
       </View>
     );
@@ -81,22 +81,13 @@ class PhotoTakerScreen extends BasicView {
       const accuracy = this.state.accuracy;
       const options = { quality: 0.5, base64: true };
       const data = await this.camera.takePictureAsync(options)
-      const base64image = await RNFS.readFile(data.uri, 'base64');
-      //navigate("Home");
-      fetch("http://192.168.1.245:8888/photo", {
-        method: 'POST',
-        headers: new Headers({
-          'Content-Type': 'application/x-www-form-urlencoded', // <-- Specifying the Content-Type
-        }),
-        body: base64image // <-- Post parameters
-      })
-        .then((response) => /*response.json())
-      .then((responseJson) =>*/ {
-          alert(lastHeading + " " + longitude + " " + latitude + " " + accuracy);
-        })
-        .catch((error) => {
-          console.error(error);
-        });;
+      navigate("Load", {
+        heading: lastHeading,
+        longitude: longitude,
+        latitude: latitude,
+        accuracy: accuracy,
+        dataUri: data.uri
+      });
     }
   };
 
@@ -106,7 +97,7 @@ class PhotoTakerScreen extends BasicView {
         this.setState({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
+          accuracy: Math.round(position.coords.accuracy * 10) /10,
           error: null,
         });
       },
@@ -133,11 +124,75 @@ class PhotoTakerScreen extends BasicView {
   }
 }
 
+class LoadingScreen extends BasicView {
+  render() {
+    this.sendPicture();
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: "center", backgroundColor: "#ffffff" }}>
+        <Image
+          style={{ width: 360, height: 480 }}
+          source={require("./assets/loading.gif")}
+        />
+        <Text>Please wait until task is processed</Text>
+      </View>
+    )
+  }
+  sendPicture = async function () {
+    const { navigation } = this.props;
+    const { navigate } = this.props.navigation;
+    const heading = navigation.getParam('heading', '');
+    const longitude = navigation.getParam('longitude', 'Could not load');
+    const latitude = navigation.getParam('latitude', 'Could not load');
+    const accuracy = navigation.getParam('accuracy', 'Could not load');
+    const dataUri = navigation.getParam('dataUri', '');
+    const base64image = await RNFS.readFile(dataUri, 'base64');
+    fetch(host + "/photo", {
+      method: 'POST',
+      headers: new Headers({
+        'Content-Type': 'application/x-www-form-urlencoded', // <-- Specifying the Content-Type
+      }),
+      body: base64image // <-- Post parameters
+    })
+      .then((response) => response.json())
+      .then((responseJson) => {
+        navigate("Map", {
+          heading: heading,
+          longitude: longitude,
+          latitude: latitude,
+          accuracy: accuracy,
+          response: responseJson
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }
+}
+
 class MapScreen extends BasicView {
   render() {
+    const { navigation } = this.props;
+    const { navigate } = this.props.navigation;
+    const heading = navigation.getParam('heading', '');
+    const longitude = navigation.getParam('longitude', 'Could not load');
+    const latitude = navigation.getParam('latitude', 'Could not load');
+    const accuracy = navigation.getParam('accuracy', 'Could not load');
+    const response = navigation.getParam('response', '');
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: "center" }}>
-        <Text>Here will be map of taken photo</Text>
+      <View style={{ flex: 1, alignItems: 'flex-start', justifyContent: "flex-start" }}>
+        <Image style={{ width: 360, height: 480, marginTop: 0 }} source={{ uri: host + "/result.jpg" }} />
+        <TouchableOpacity style={{ width: 340, paddingLeft: 10, paddingRight:10, alignItems: 'center', justifyContent: "center", flexDirection: 'column' }} onPress={() => { navigate("Home") }}>
+          <View style={{ alignItems: 'center', justifyContent: "center", flexDirection: 'row', height: 40 }}>
+            <View><Text>Lon: {longitude} </Text></View>
+            <View><Text>Lat: {latitude} </Text></View>
+            <View><Text>Acc: {accuracy} m</Text></View>
+          </View>
+          <View style={{ alignItems: 'center', justifyContent: "center", flexDirection: 'row', height: 40 }}>
+            <View><Text>X axis angle: {response["theta"]} </Text></View>
+            <View><Text>Heading: {heading} </Text></View>
+            <View><Text>Y axis angle: {response["shear"]} </Text></View>
+          </View>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -148,8 +203,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row'
+    justifyContent: 'center'
   },
   button: {
     backgroundColor: '#fff',
@@ -183,6 +237,9 @@ const styles = StyleSheet.create({
   stretch: {
     width: 100,
     height: 100
+  },
+  parameters_box: {
+    width: 120
   }
 });
 
@@ -190,7 +247,8 @@ const RootStack = createStackNavigator(
   {
     Home: HomeScreen,
     PhotoTaker: PhotoTakerScreen,
-    Map: MapScreen
+    Map: MapScreen,
+    Load: LoadingScreen
   },
   {
     initialRouteName: 'Home',
