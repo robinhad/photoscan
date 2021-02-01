@@ -11,21 +11,30 @@ Vision was to use this project to:
 
 This project was made as part of CS Bachelor's diploma.
 
-# Result from image recognition
-![Lviv Opera Theatre Photo Parameters](examples/image-52.jpeg "Lviv Opera Theatre Photo Parameters")
+CAUTION: this project is not maintained and may contain dependencies with vulnerabilities.
 
-# Historical photo, to which actual was compared
-![Lviv Opera Theatre Historical Photo](examples/image-50.jpeg "Lviv Opera Theatre Historical Photo")
+Historical photo          |  Position and angle estimation result
+:-------------------------:|:-------------------------:
+![Lviv Opera Theatre Historical Photo](examples/image-50.jpeg "Lviv Opera Theatre Historical Photo")  |  ![Lviv Opera Theatre Photo Parameters](examples/image-52.jpeg "Lviv Opera Theatre Photo Parameters")
+
 
 # Application architecture
 
-Mobile application
-![Application main screen](examples/image-42.png "Application main screen")
+Application consists of two parts:
 
-Result screen
-![Application result screen](examples/image-46.png "Application result screen")
+1. Mobile application, which have the following functions:
+- takes photo and sends it to server
+- obtains GPS coordinates, device compass heading and sends it to server
+
+Mobile application            |  Result screen
+:-------------------------:|:-------------------------:
+![Application main screen](examples/image-42.png "Application main screen")  |  ![Application result screen](examples/image-46.png "Application result screen")
 
 Tested only on Android!
 
+2. Simple Python Tornado server, which calculates properties of photograph.
+Angle and position is calculated using OpenCV library and [Speeded up robust features (SURF)](https://en.wikipedia.org/wiki/Speeded_up_robust_features) algorithm
+
+# Attributions
 
 Icons made by [monkik](https://www.flaticon.com/authors/monkik) from [www.flaticon.com](https://www.flaticon.com/") is licensed by  [Creative Commons BY 3.0](http://creativecommons.org/licenses/by/3.0)
